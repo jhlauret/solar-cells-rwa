@@ -1,0 +1,196 @@
+# ============================================================
+#  SolarCells RWA — Orchestration Docker Compose v2
+#  Stack : Postgres 16 + Odoo 18 + MinIO + Node.js backend + React frontend
+#  Voir Makefile pour les commandes : `make help`
+# ============================================================
+
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16
+    container_name: solarcells-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-solarcells}
+      POSTGRES_USER:     ${POSTGRES_USER:-odoo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-odoo}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-odoo} -d ${POSTGRES_DB:-solarcells}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - solarcells-net
+
+  # ── Odoo 18 ─────────────────────────────────────────────────────────────────
+  odoo:
+    image: odoo:18.0
+    container_name: solarcells-odoo
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      HOST:     postgres
+      USER:     ${POSTGRES_USER:-odoo}
+      PASSWORD: ${POSTGRES_PASSWORD:-odoo}
+    volumes:
+      - ./odoo-addons:/mnt/extra-addons
+      - odoo-data:/var/lib/odoo
+    ports:
+      - "8069:8069"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8069/web/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - solarcells-net
+
+  # ── MinIO (stockage objets : documents KYC + actifs) ─────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: solarcells-minio
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER:     ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"   # API S3
+      - "9001:9001"   # Console web
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9000/minio/health/live || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    networks:
+      - solarcells-net
+
+  # ── Redis (refresh tokens JWT + sessions) ───────────────────────────────────
+  redis:
+    image: redis:7.4-alpine
+    container_name: solarcells-redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - solarcells-net
+
+  # ── Node.js Backend ──────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend-node
+      dockerfile: Dockerfile
+      target: builder          # stage builder pour le dev (pas le runtime allégé)
+    container_name: solarcells-backend
+    working_dir: /app
+    command: ["npx", "tsx", "watch", "src/server.ts"]
+    depends_on:
+      odoo:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      NODE_ENV:              development
+      PORT:                  3001
+      REDIS_URL:             redis://redis:6379
+      ODOO_URL:              http://odoo:8069
+      ODOO_DB:               ${POSTGRES_DB:-solarcells}
+      ODOO_API_USER:         ${ODOO_API_USER:-api@solarcells.com}
+      ODOO_API_PASSWORD:     ${ODOO_API_PASSWORD:-api_password}
+      MINIO_ENDPOINT:        minio
+      MINIO_PORT:            9000
+      MINIO_USE_SSL:         "false"
+      MINIO_ACCESS_KEY:      ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY:      ${MINIO_ROOT_PASSWORD:-minioadmin}
+      JWT_ACCESS_SECRET:     ${JWT_ACCESS_SECRET:-dev-access-secret-change-in-prod-32ch}
+      JWT_REFRESH_SECRET:    ${JWT_REFRESH_SECRET:-dev-refresh-secret-change-in-prod-32c}
+      STRIPE_SECRET_KEY:     ${STRIPE_SECRET_KEY:-sk_test_placeholder}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
+      CORS_ORIGINS:          "http://localhost:5173,http://frontend:5173"
+    volumes:
+      - ./backend-node/src:/app/src    # hot-reload du code source
+    ports:
+      - "3001:3001"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - solarcells-net
+
+      SMTP_HOST:             ${SMTP_HOST:-smtp.mailgun.org}
+      SMTP_PORT:             ${SMTP_PORT:-587}
+      SMTP_USER:             ${SMTP_USER:-}
+      SMTP_PASSWORD:         ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL:       ${SMTP_FROM_EMAIL:-noreply@solarcells.com}
+      SMTP_FROM_NAME:        SolarCells
+
+  # ── React Frontend ───────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend-react
+      dockerfile: Dockerfile
+    container_name: solarcells-frontend
+    command: npm run dev
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://backend:3001/api/v1
+    volumes:
+      - ./frontend-react/src:/app/src           # hot-reload
+      - /app/node_modules                        # node_modules du container
+    ports:
+      - "5173:5173"
+    networks:
+      - solarcells-net
+
+  # ── nginx reverse proxy ──────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: solarcells-nginx
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "80:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/nginx-health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - solarcells-net
+
+volumes:
+  pgdata:
+  odoo-data:
+  minio-data:
+  redis-data:
+
+networks:
+  solarcells-net:
+    driver: bridge
