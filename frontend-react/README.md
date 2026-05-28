@@ -79,11 +79,24 @@ Source fichier : Google folder under
 https://drive.google.com/drive/folders/1DwTdSEWMZeUsJZ08nuE1HY-vNKyHCNsP
 
 **est ce que tu peux me lister les 25 pages ? ├── src/pages/ 25 pages**
-
 Pages générales (2)
-#FichierRouteDescription
-**1LandingPage.tsx**| /| Page d'accueil publique — présentation SolarCells, CTA inscription
-**2 NotFoundPage.tsx**|*|Page 404 — lien retour vers l'accueil
+Auth (4)
+KYC (6)
+Wallet (2)
+Marketplace (2)
+Tunnel d'investissement (5)
+> InvestAmountPage.tsx
+> InvestSummaryPage.tsx
+> InvestPaymentPage.tsx
+> InvestConfirmationPage.tsx
+> InvestSuccessPage.tsx
+Dashboard (4)
+> DashboardPage.tsx
+> PortfolioPage.tsx
+> YieldPage.tsx
+> TransfersPage.tsx
+Profil (1)
+> ProfilePage.tsx
 
 ## Statut
 🚧 Non initialisé. Aucun `package.json` à ce stade.
