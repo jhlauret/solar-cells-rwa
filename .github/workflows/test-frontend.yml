@@ -1,0 +1,72 @@
+name: Test — Frontend React
+
+on:
+  pull_request:
+    paths:
+      - 'frontend-react/**'
+      - '.github/workflows/test-frontend.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'frontend-react/**'
+
+concurrency:
+  group: frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-frontend:
+    name: TypeScript + Vite build
+    runs-on: ubuntu-22.04
+
+    defaults:
+      run:
+        working-directory: frontend-react
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend-react/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript type-check
+        run: npm run type-check
+        env:
+          # Variables Vite nécessaires pour la compilation
+          VITE_API_URL:            http://localhost:3001/api/v1
+          VITE_STRIPE_PUBLIC_KEY:  pk_test_placeholder
+
+      - name: Vite production build
+        run: npm run build
+        env:
+          VITE_API_URL:            https://api.solarcells.com/api/v1
+          VITE_STRIPE_PUBLIC_KEY:  pk_test_placeholder
+          NODE_OPTIONS:            --max-old-space-size=4096
+
+      - name: Check bundle size
+        run: |
+          BUNDLE_SIZE=$(du -sh dist/ | cut -f1)
+          echo "📦 Bundle size: $BUNDLE_SIZE"
+          # Alerte si > 5 MB
+          BYTES=$(du -sb dist/ | cut -f1)
+          if [ "$BYTES" -gt 5242880 ]; then
+            echo "⚠️  Bundle dépasse 5 MB ($BUNDLE_SIZE)"
+          else
+            echo "✅ Bundle dans les limites ($BUNDLE_SIZE)"
+          fi
+
+      - name: Upload dist
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend-react/dist/
+          retention-days: 1   # utilisé uniquement par le job deploy

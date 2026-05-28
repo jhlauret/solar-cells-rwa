@@ -1,0 +1,196 @@
+name: Deploy — Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # déclenchement manuel possible
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false   # ne jamais interrompre un deploy en cours
+
+# Secrets à configurer dans GitHub → Settings → Secrets and variables → Actions :
+#   DOCKER_USERNAME        Docker Hub username
+#   DOCKER_PASSWORD        Docker Hub token (read/write)
+#   DEPLOY_SSH_KEY         Clé SSH privée vers le serveur de prod
+#   DEPLOY_HOST            IP ou hostname du serveur
+#   DEPLOY_USER            Utilisateur SSH sur le serveur
+#   DEPLOY_PATH            Chemin absolu du projet sur le serveur (ex: /srv/solarcells)
+#   SLACK_WEBHOOK_URL      Webhook Slack pour les notifications (optionnel)
+
+env:
+  REGISTRY:    docker.io
+  IMAGE_BACK:  ${{ secrets.DOCKER_USERNAME }}/solarcells-backend
+  IMAGE_FRONT: ${{ secrets.DOCKER_USERNAME }}/solarcells-frontend
+
+jobs:
+  # ── Étape 1 : tous les tests doivent passer ──────────────────────────────────
+  gate:
+    name: Quality gate
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend-node/package-lock.json
+
+      - name: Backend — type-check + tests
+        working-directory: backend-node
+        run: |
+          npm ci
+          npm run type-check
+          npm test
+        env:
+          NODE_ENV:              test
+          JWT_ACCESS_SECRET:     ci-access-secret-min-32-characters-ok
+          JWT_REFRESH_SECRET:    ci-refresh-secret-min-32-characters-ok
+          ODOO_URL:              http://localhost:8069
+          ODOO_DB:               solarcells_test
+          ODOO_API_USER:         api@test.com
+          ODOO_API_PASSWORD:     test_password
+          MINIO_ENDPOINT:        localhost
+          MINIO_ACCESS_KEY:      minioadmin
+          MINIO_SECRET_KEY:      minioadmin
+          STRIPE_SECRET_KEY:     sk_test_placeholder_for_ci_only
+          STRIPE_WEBHOOK_SECRET: whsec_placeholder_for_ci_only
+
+      - name: Frontend — type-check + build
+        working-directory: frontend-react
+        run: |
+          npm ci
+          npm run type-check
+          npm run build
+        env:
+          VITE_API_URL:           https://api.solarcells.com/api/v1
+          VITE_STRIPE_PUBLIC_KEY: pk_test_placeholder
+          NODE_OPTIONS:           --max-old-space-size=4096
+
+  # ── Étape 2 : build et push des images Docker ────────────────────────────────
+  build-and-push:
+    name: Build Docker images
+    runs-on: ubuntu-22.04
+    needs: gate
+    outputs:
+      sha_tag: ${{ steps.meta.outputs.sha_tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Compute tags
+        id: meta
+        run: |
+          SHA=$(echo ${{ github.sha }} | cut -c1-8)
+          echo "sha_tag=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Tags: latest + $SHA"
+
+      - name: Build & push backend
+        uses: docker/build-push-action@v5
+        with:
+          context:    ./backend-node
+          file:       ./backend-node/Dockerfile
+          push:       true
+          tags: |
+            ${{ env.IMAGE_BACK }}:latest
+            ${{ env.IMAGE_BACK }}:${{ steps.meta.outputs.sha_tag }}
+          cache-from: type=registry,ref=${{ env.IMAGE_BACK }}:buildcache
+          cache-to:   type=registry,ref=${{ env.IMAGE_BACK }}:buildcache,mode=max
+
+      - name: Build & push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend-react
+          push:    true
+          tags: |
+            ${{ env.IMAGE_FRONT }}:latest
+            ${{ env.IMAGE_FRONT }}:${{ steps.meta.outputs.sha_tag }}
+          build-args: |
+            VITE_API_URL=https://api.solarcells.com/api/v1
+            VITE_STRIPE_PUBLIC_KEY=${{ secrets.STRIPE_PUBLIC_KEY }}
+          cache-from: type=registry,ref=${{ env.IMAGE_FRONT }}:buildcache
+          cache-to:   type=registry,ref=${{ env.IMAGE_FRONT }}:buildcache,mode=max
+
+  # ── Étape 3 : déploiement SSH sur le serveur ────────────────────────────────
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-22.04
+    needs: build-and-push
+    environment: production   # protection manuelle activable dans GitHub
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Copy docker-compose to server
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            docker-compose.yml \
+            ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/
+
+      - name: Deploy (rolling update)
+        env:
+          SHA_TAG:       ${{ needs.build-and-push.outputs.sha_tag }}
+          DEPLOY_HOST:   ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER:   ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH:   ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "cd ${{ env.DEPLOY_PATH }} && \
+             docker compose pull backend frontend && \
+             docker compose up -d --no-deps --force-recreate backend frontend && \
+             docker image prune -f && \
+             echo '✅ Deploy $SHA_TAG terminé'"
+
+      - name: Health check
+        run: |
+          sleep 15
+          STATUS=$(curl -sf https://api.solarcells.com/health | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('status','?'))" 2>/dev/null || echo "unreachable")
+          echo "Health: $STATUS"
+          if [ "$STATUS" != "ok" ]; then
+            echo "❌ Health check échoué après le deploy"
+            exit 1
+          fi
+
+      - name: Notify Slack on success
+        if: success() && secrets.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "✅ *SolarCells déployé* — `${{ needs.build-and-push.outputs.sha_tag }}` par ${{ github.actor }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify Slack on failure
+        if: failure() && secrets.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "❌ *Deploy SolarCells échoué* — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Voir les logs>"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

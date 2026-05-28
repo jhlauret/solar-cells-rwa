@@ -1,0 +1,115 @@
+name: Test — Odoo addons
+
+on:
+  pull_request:
+    paths:
+      - 'odoo-addons/**'
+      - '.github/workflows/test-odoo.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'odoo-addons/**'
+
+# Un seul job en parallèle par branche pour économiser les minutes CI
+concurrency:
+  group: odoo-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-odoo:
+    name: Odoo 18 — ${{ matrix.addon }}
+    runs-on: ubuntu-22.04
+
+    strategy:
+      fail-fast: false   # continuer les autres addons si l'un échoue
+      matrix:
+        addon:
+          - solar_audit
+          - solar_core
+          - solar_kyc
+          - solar_wallet
+          - solar_asset
+          - solar_holding
+          - solar_payment
+          - solar_investment
+          - solar_market
+          - solar_yield
+          - solar_compliance
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER:     odoo
+          POSTGRES_PASSWORD: odoo
+          POSTGRES_DB:       solarcells_test
+        options: >-
+          --health-cmd "pg_isready -U odoo"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    container:
+      image: odoo:18.0
+      options: --user root
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install extra-addons
+        run: cp -r odoo-addons/* /mnt/extra-addons/
+
+      # Installer les dépendances dans l'ordre topologique
+      - name: Install base addons (prerequisites)
+        run: |
+          PREREQS=""
+          case "${{ matrix.addon }}" in
+            solar_core)       PREREQS="solar_audit" ;;
+            solar_kyc)        PREREQS="solar_audit,solar_core" ;;
+            solar_wallet)     PREREQS="solar_audit,solar_core,solar_kyc" ;;
+            solar_asset)      PREREQS="solar_audit,solar_core" ;;
+            solar_holding)    PREREQS="solar_audit,solar_core,solar_asset" ;;
+            solar_payment)    PREREQS="solar_audit,solar_core" ;;
+            solar_investment) PREREQS="solar_audit,solar_core,solar_kyc,solar_wallet,solar_asset,solar_holding,solar_payment" ;;
+            solar_market)     PREREQS="solar_audit,solar_core,solar_kyc,solar_wallet,solar_asset,solar_holding,solar_payment,solar_investment" ;;
+            solar_yield)      PREREQS="solar_audit,solar_core,solar_kyc,solar_wallet,solar_asset,solar_holding,solar_payment,solar_investment,solar_market" ;;
+            solar_compliance) PREREQS="solar_audit,solar_core,solar_kyc,solar_wallet,solar_asset,solar_holding,solar_payment,solar_investment,solar_market,solar_yield" ;;
+          esac
+          if [ -n "$PREREQS" ]; then
+            echo "Installing prerequisites: $PREREQS"
+            odoo --stop-after-init -d solarcells_test \
+              -r odoo -w odoo \
+              --db_host postgres \
+              -i "$PREREQS" \
+              --without-demo all
+          fi
+
+      - name: Run tests — ${{ matrix.addon }}
+        env:
+          PGHOST:     postgres
+          PGUSER:     odoo
+          PGPASSWORD: odoo
+        run: |
+          odoo \
+            --test-enable \
+            --stop-after-init \
+            --test-tags ${{ matrix.addon }} \
+            --log-level test \
+            -d solarcells_test \
+            -r odoo -w odoo \
+            --db_host postgres \
+            -i ${{ matrix.addon }} \
+            --without-demo all \
+            2>&1 | tee /tmp/odoo-test.log
+
+          # Échec si des tests ont échoué
+          grep -E "FAIL:|ERROR:" /tmp/odoo-test.log && exit 1 || true
+          echo "✅ Tests ${{ matrix.addon }} passés"
+
+      - name: Upload test log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: odoo-log-${{ matrix.addon }}
+          path: /tmp/odoo-test.log
