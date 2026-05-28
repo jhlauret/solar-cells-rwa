@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_solar_yield_dist_tree" model="ir.ui.view">
+        <field name="name">solar.yield.distribution.tree</field>
+        <field name="model">solar.yield.distribution</field>
+        <field name="arch" type="xml">
+            <tree string="Yield Distributions"
+                  decoration-success="state == 'completed'"
+                  decoration-warning="state == 'distributing'"
+                  decoration-info="state == 'validated'"
+                  decoration-muted="state in ['cancelled','draft']">
+                <field name="name"/>
+                <field name="asset_id"/>
+                <field name="period"/>
+                <field name="year"/>
+                <field name="distribution_date"/>
+                <field name="gross_revenue"/>
+                <field name="distribution_per_cell" optional="show"/>
+                <field name="line_count" string="Investors"/>
+                <field name="state" widget="badge"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_solar_yield_dist_form" model="ir.ui.view">
+        <field name="name">solar.yield.distribution.form</field>
+        <field name="model">solar.yield.distribution</field>
+        <field name="arch" type="xml">
+            <form string="Yield Distribution">
+                <header>
+                    <button name="action_validate" string="Validate &amp; create lines"
+                            states="draft" type="object" class="oe_highlight"
+                            groups="solar_core.group_finance,solar_core.group_compliance"
+                            confirm="Validate? Per-cell amount will be locked and investor lines created."/>
+                    <button name="action_pay_all" string="Pay all investors"
+                            states="validated,distributing" type="object"
+                            class="oe_highlight"
+                            groups="solar_core.group_finance"/>
+                    <button name="action_cancel" string="Cancel"
+                            states="draft,validated" type="object"
+                            class="btn-danger"
+                            groups="solar_core.group_compliance"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,validated,distributing,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box">
+                        <button name="%(action_solar_yield_lines)d" type="action"
+                                class="oe_stat_button" icon="fa-users">
+                            <field name="line_count" widget="statinfo" string="Investors"/>
+                        </button>
+                    </div>
+                    <group>
+                        <group string="Distribution">
+                            <field name="name" readonly="1"/>
+                            <field name="asset_id"/>
+                            <field name="period"/>
+                            <field name="year"/>
+                            <field name="distribution_date"/>
+                        </group>
+                        <group string="Revenue">
+                            <field name="production_mwh"/>
+                            <field name="gross_revenue"/>
+                            <field name="distribution_per_cell" readonly="1"/>
+                        </group>
+                    </group>
+                    <field name="line_ids" readonly="1">
+                        <tree decoration-success="state=='paid'"
+                              decoration-warning="state=='pending'"
+                              decoration-danger="state=='failed'">
+                            <field name="partner_id"/>
+                            <field name="cells_at_distribution"/>
+                            <field name="amount_gross"/>
+                            <field name="amount_net"/>
+                            <field name="state" widget="badge"/>
+                            <field name="paid_at" optional="show"/>
+                        </tree>
+                    </field>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_solar_yield_distributions" model="ir.actions.act_window">
+        <field name="name">Yield Distributions</field>
+        <field name="res_model">solar.yield.distribution</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_solar_yield_lines" model="ir.actions.act_window">
+        <field name="name">Yield Lines</field>
+        <field name="res_model">solar.yield.line</field>
+        <field name="view_mode">tree</field>
+    </record>
+
+    <!-- ir.rule: investors see only their own yield lines -->
+    <record id="rule_yield_line_investor" model="ir.rule">
+        <field name="name">Investors: own yield lines</field>
+        <field name="model_id" ref="solar_yield.model_solar_yield_line"/>
+        <field name="groups" eval="[(4, ref('solar_core.group_investor'))]"/>
+        <field name="domain_force">[('partner_id.user_ids','in',[user.id])]</field>
+    </record>
+
+</odoo>

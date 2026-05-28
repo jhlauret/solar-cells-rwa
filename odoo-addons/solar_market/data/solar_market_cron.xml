@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="ir_cron_expire_market_orders" model="ir.cron">
+            <field name="name">Solar Market: Expire overdue orders</field>
+            <field name="model_id" ref="solar_market.model_solar_market_order"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_expire_market_orders()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active">True</field>
+            <field name="user_id" ref="base.user_root"/>
+        </record>
+    </data>
+</odoo>

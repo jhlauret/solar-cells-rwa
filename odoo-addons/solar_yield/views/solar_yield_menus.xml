@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_solar_yield_root" name="Yield"
+              parent="solar_audit.menu_solar_root" sequence="45"
+              groups="solar_core.group_finance,solar_core.group_compliance,base.group_system"/>
+    <menuitem id="menu_solar_yield_distributions" name="Distributions"
+              parent="menu_solar_yield_root"
+              action="action_solar_yield_distributions" sequence="10"/>
+    <menuitem id="menu_solar_yield_lines" name="Investor lines"
+              parent="menu_solar_yield_root"
+              action="action_solar_yield_lines" sequence="20"/>
+</odoo>

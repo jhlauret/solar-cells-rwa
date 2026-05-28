@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_solar_market_order_investor,solar.market.order.investor,model_solar_market_order,solar_core.group_investor,1,0,1,0
+access_solar_market_order_compliance,solar.market.order.compliance,model_solar_market_order,solar_core.group_compliance,1,1,1,0
+access_solar_market_order_api,solar.market.order.api,model_solar_market_order,solar_core.group_api,1,1,1,0
+access_solar_market_trade_investor,solar.market.trade.investor,model_solar_market_trade,solar_core.group_investor,1,0,0,0
+access_solar_market_trade_compliance,solar.market.trade.compliance,model_solar_market_trade,solar_core.group_compliance,1,1,1,0
+access_solar_market_trade_api,solar.market.trade.api,model_solar_market_trade,solar_core.group_api,1,1,1,0

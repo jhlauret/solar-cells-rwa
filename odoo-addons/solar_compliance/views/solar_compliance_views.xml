@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_solar_compliance_alert_tree" model="ir.ui.view">
+        <field name="name">solar.compliance.alert.tree</field>
+        <field name="model">solar.compliance.alert</field>
+        <field name="arch" type="xml">
+            <tree string="Compliance Alerts"
+                  decoration-danger="severity in ['high','critical']"
+                  decoration-warning="severity == 'medium'"
+                  decoration-muted="state in ['resolved','dismissed']">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="alert_type"/>
+                <field name="severity" widget="badge"
+                       options="{'classes':{'critical':'danger','high':'danger','medium':'warning','low':'secondary'}}"/>
+                <field name="state" widget="badge"/>
+                <field name="raised_at"/>
+                <field name="resolved_at" optional="show"/>
+                <field name="screening_source" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_solar_compliance_alert_form" model="ir.ui.view">
+        <field name="name">solar.compliance.alert.form</field>
+        <field name="model">solar.compliance.alert</field>
+        <field name="arch" type="xml">
+            <form string="Compliance Alert">
+                <header>
+                    <button name="action_start_review" string="Start review"
+                            states="open" type="object" class="oe_highlight"/>
+                    <button name="action_resolve" string="Resolve"
+                            states="open,under_review,escalated"
+                            type="object" class="oe_highlight"
+                            groups="solar_core.group_compliance"/>
+                    <button name="action_dismiss" string="Dismiss (false positive)"
+                            states="open,under_review" type="object"
+                            groups="solar_core.group_compliance"/>
+                    <button name="action_escalate" string="Escalate"
+                            states="open,under_review" type="object"
+                            class="btn-warning"
+                            groups="solar_core.group_compliance"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="open,under_review,resolved"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Alert">
+                            <field name="name" readonly="1"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="alert_type"/>
+                            <field name="severity" widget="badge"/>
+                            <field name="raised_at" readonly="1"/>
+                            <field name="raised_by" readonly="1"/>
+                        </group>
+                        <group string="Screening">
+                            <field name="screening_source"/>
+                            <field name="screening_match_id"/>
+                        </group>
+                    </group>
+                    <group string="Description">
+                        <field name="description" nolabel="1"/>
+                    </group>
+                    <group string="Resolution"
+                           invisible="state not in ['resolved','dismissed']">
+                        <field name="resolved_at" readonly="1"/>
+                        <field name="resolved_by" readonly="1"/>
+                        <field name="resolution_note" readonly="1"/>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_solar_compliance_alerts_open" model="ir.actions.act_window">
+        <field name="name">Open Alerts</field>
+        <field name="res_model">solar.compliance.alert</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('state','in',['open','under_review','escalated'])]</field>
+    </record>
+
+    <record id="action_solar_compliance_alerts_all" model="ir.actions.act_window">
+        <field name="name">All Alerts</field>
+        <field name="res_model">solar.compliance.alert</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+</odoo>

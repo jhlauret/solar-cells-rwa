@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_solar_market_order_tree" model="ir.ui.view">
+        <field name="name">solar.market.order.tree</field>
+        <field name="model">solar.market.order</field>
+        <field name="arch" type="xml">
+            <tree string="Market Orders"
+                  decoration-success="state == 'filled'"
+                  decoration-warning="state in ['published','partial']"
+                  decoration-muted="state in ['cancelled','expired']">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="asset_id"/>
+                <field name="direction" widget="badge"
+                       options="{'classes':{'sell':'warning','buy':'success'}}"/>
+                <field name="cells_offered"/>
+                <field name="cells_remaining" optional="show"/>
+                <field name="price_per_cell"/>
+                <field name="total_amount"/>
+                <field name="state" widget="badge"/>
+                <field name="expires_at" optional="show"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_solar_market_trade_tree" model="ir.ui.view">
+        <field name="name">solar.market.trade.tree</field>
+        <field name="model">solar.market.trade</field>
+        <field name="arch" type="xml">
+            <tree string="Market Trades"
+                  decoration-success="state == 'settled'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="name"/>
+                <field name="seller_id"/>
+                <field name="buyer_id"/>
+                <field name="asset_id"/>
+                <field name="cells_traded"/>
+                <field name="price_per_cell"/>
+                <field name="trade_amount"/>
+                <field name="state" widget="badge"/>
+                <field name="settled_at" optional="show"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_solar_market_orders" model="ir.actions.act_window">
+        <field name="name">Market Orders</field>
+        <field name="res_model">solar.market.order</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_solar_market_trades" model="ir.actions.act_window">
+        <field name="name">Market Trades</field>
+        <field name="res_model">solar.market.trade</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- ir.rule: investors see only own orders -->
+    <record id="rule_market_order_investor" model="ir.rule">
+        <field name="name">Investors: own market orders</field>
+        <field name="model_id" ref="solar_market.model_solar_market_order"/>
+        <field name="groups" eval="[(4, ref('solar_core.group_investor'))]"/>
+        <field name="domain_force">[('partner_id.user_ids','in',[user.id])]</field>
+    </record>
+
+</odoo>

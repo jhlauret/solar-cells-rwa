@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_solar_compliance_root" name="AML / Compliance"
+              parent="solar_audit.menu_solar_root" sequence="50"
+              groups="solar_core.group_compliance,base.group_system"/>
+    <menuitem id="menu_solar_compliance_open" name="Open alerts"
+              parent="menu_solar_compliance_root"
+              action="action_solar_compliance_alerts_open" sequence="10"/>
+    <menuitem id="menu_solar_compliance_all" name="All alerts"
+              parent="menu_solar_compliance_root"
+              action="action_solar_compliance_alerts_all" sequence="20"/>
+</odoo>
