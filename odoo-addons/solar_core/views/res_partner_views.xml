@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- INVESTOR LIST VIEW                                            -->
+    <!-- ============================================================ -->
+    <record id="view_solar_investor_tree" model="ir.ui.view">
+        <field name="name">solar.investor.tree</field>
+        <field name="model">res.partner</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <tree string="Investors"
+                  decoration-success="x_account_state == 'active'"
+                  decoration-warning="x_account_state == 'pending'"
+                  decoration-danger="x_account_state == 'suspended'"
+                  decoration-muted="x_account_state == 'closed'">
+                <field name="name"/>
+                <field name="email"/>
+                <field name="x_investor_type" optional="show"/>
+                <field name="x_account_state" widget="badge"/>
+                <field name="phone" optional="hide"/>
+                <field name="country_id"/>
+                <field name="x_uuid" optional="hide" groups="base.group_no_one"/>
+                <field name="x_cgp_id" optional="hide"/>
+                <field name="x_iban_validated_at" optional="hide"/>
+                <field name="x_terms_accepted_at" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- INVESTOR SEARCH VIEW                                          -->
+    <!-- ============================================================ -->
+    <record id="view_solar_investor_search" model="ir.ui.view">
+        <field name="name">solar.investor.search</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <search string="Search investors">
+                <field name="name"/>
+                <field name="email"/>
+                <field name="x_uuid" string="UUID"/>
+                <field name="x_cgp_id"/>
+
+                <separator/>
+                <filter string="Active"
+                        name="filter_active"
+                        domain="[('x_account_state', '=', 'active')]"/>
+                <filter string="Pending confirmation"
+                        name="filter_pending"
+                        domain="[('x_account_state', '=', 'pending')]"/>
+                <filter string="Suspended"
+                        name="filter_suspended"
+                        domain="[('x_account_state', '=', 'suspended')]"/>
+                <filter string="Closed"
+                        name="filter_closed"
+                        domain="[('x_account_state', '=', 'closed')]"/>
+
+                <separator/>
+                <filter string="Retail"
+                        name="filter_retail"
+                        domain="[('x_investor_type', '=', 'retail')]"/>
+                <filter string="Qualified"
+                        name="filter_qualified"
+                        domain="[('x_investor_type', '=', 'qualified')]"/>
+                <filter string="Institutional"
+                        name="filter_institutional"
+                        domain="[('x_investor_type', '=', 'institutional')]"/>
+
+                <separator/>
+                <filter string="IBAN validated"
+                        name="filter_iban_validated"
+                        domain="[('x_iban_validated_at', '!=', False)]"/>
+                <filter string="Terms accepted"
+                        name="filter_terms"
+                        domain="[('x_terms_accepted_at', '!=', False)]"/>
+                <filter string="Phone validated"
+                        name="filter_phone"
+                        domain="[('x_phone_validated', '=', True)]"/>
+
+                <group string="Group by">
+                    <filter string="Account state"
+                            name="group_state"
+                            context="{'group_by': 'x_account_state'}"/>
+                    <filter string="Investor type"
+                            name="group_type"
+                            context="{'group_by': 'x_investor_type'}"/>
+                    <filter string="Country"
+                            name="group_country"
+                            context="{'group_by': 'country_id'}"/>
+                    <filter string="CGP"
+                            name="group_cgp"
+                            context="{'group_by': 'x_cgp_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- FORM VIEW EXTENSION — adds "Investor (SolarCells)" tab        -->
+    <!-- to the standard res.partner form.                             -->
+    <!-- ============================================================ -->
+    <record id="view_partner_form_solar_core_inherit" model="ir.ui.view">
+        <field name="name">res.partner.form.solar_core.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Add action buttons in the stat button bar -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_activate_account"
+                        type="object"
+                        string="Activate"
+                        icon="fa-check-circle"
+                        class="oe_stat_button"
+                        invisible="x_account_state != 'pending'"
+                        groups="solar_core.group_compliance,solar_core.group_api"/>
+                <button name="action_close_account"
+                        type="object"
+                        string="Close account"
+                        icon="fa-times-circle"
+                        class="oe_stat_button"
+                        invisible="x_account_state == 'closed'"
+                        groups="solar_core.group_compliance"/>
+            </xpath>
+
+            <!-- Add the "Investor (SolarCells)" page at the end of the notebook -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Investor (SolarCells)"
+                      name="solar_investor"
+                      invisible="not x_is_investor"
+                      groups="solar_core.group_asset_manager,
+                              solar_core.group_compliance,
+                              solar_core.group_finance,
+                              solar_core.group_api,
+                              base.group_system">
+                    <group>
+                        <!-- Status -->
+                        <group string="Status">
+                            <field name="x_is_investor"/>
+                            <field name="x_investor_type"/>
+                            <field name="x_account_state" widget="badge"/>
+                            <field name="x_account_activated_at" readonly="1"/>
+                            <field name="x_account_suspended_at" readonly="1"
+                                   invisible="not x_account_suspended_at"/>
+                            <field name="x_suspension_reason" readonly="1"
+                                   invisible="not x_suspension_reason"/>
+                            <field name="x_account_closed_at" readonly="1"
+                                   invisible="not x_account_closed_at"/>
+                            <field name="x_uuid" readonly="1"
+                                   groups="base.group_no_one"/>
+                        </group>
+
+                        <!-- Identity -->
+                        <group string="Identity">
+                            <field name="x_date_of_birth"/>
+                            <field name="x_nationality_id"/>
+                            <field name="x_phone_validated" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <group>
+                        <!-- Banking -->
+                        <group string="Banking">
+                            <field name="x_iban"/>
+                            <field name="x_iban_validated_at" readonly="1"/>
+                            <field name="x_iban_validated_by" readonly="1"
+                                   invisible="not x_iban_validated_by"/>
+                        </group>
+
+                        <!-- Delegation &amp; consent -->
+                        <group string="Delegation &amp; consent">
+                            <field name="x_cgp_id"/>
+                            <field name="x_terms_accepted_at" readonly="1"/>
+                            <field name="x_terms_version" readonly="1"/>
+                            <field name="x_marketing_optin" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- WINDOW ACTIONS                                                -->
+    <!-- ============================================================ -->
+    <record id="action_solar_investor_all" model="ir.actions.act_window">
+        <field name="name">All Investors</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_solar_investor_tree"/>
+        <field name="search_view_id" ref="view_solar_investor_search"/>
+        <field name="domain">[('x_is_investor', '=', True)]</field>
+        <field name="context">{'default_x_is_investor': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No investor yet.
+            </p>
+            <p>
+                Investors are created automatically when a user signs up on
+                the SolarCells platform. You can also create them manually.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_solar_investor_pending" model="ir.actions.act_window">
+        <field name="name">Pending confirmation</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('x_is_investor', '=', True),
+                               ('x_account_state', '=', 'pending')]</field>
+    </record>
+
+    <record id="action_solar_investor_suspended" model="ir.actions.act_window">
+        <field name="name">Suspended investors</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('x_is_investor', '=', True),
+                               ('x_account_state', '=', 'suspended')]</field>
+    </record>
+
+</odoo>

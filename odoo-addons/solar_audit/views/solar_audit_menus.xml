@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Root menu "Solar" — shared by all solar_* addons.            -->
+    <!-- Defined here in solar_audit because it is the foundation     -->
+    <!-- addon. Other addons reference this same menu via ref().      -->
+    <!-- ============================================================ -->
+    <menuitem id="menu_solar_root"
+              name="Solar"
+              sequence="20"
+              groups="solar_audit.group_audit_reader,base.group_system"/>
+
+    <!-- ============================================================ -->
+    <!-- Sub-menu "Audit" — visible to readers and admins             -->
+    <!-- ============================================================ -->
+    <menuitem id="menu_solar_audit_section"
+              name="Audit"
+              parent="menu_solar_root"
+              sequence="90"
+              groups="solar_audit.group_audit_reader,base.group_system"/>
+
+    <!-- ============================================================ -->
+    <!-- Item — Audit log list                                         -->
+    <!-- ============================================================ -->
+    <menuitem id="menu_solar_audit_log"
+              name="Audit log"
+              parent="menu_solar_audit_section"
+              action="action_solar_audit_log"
+              sequence="10"/>
+
+</odoo>

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!--
+            ==============================================================
+            Module category — Solar
+            All SolarCells groups live under this category.
+            ==============================================================
+        -->
+        <record id="module_category_solar" model="ir.module.category">
+            <field name="name">Solar</field>
+            <field name="description">SolarCells RWA platform access groups.</field>
+            <field name="sequence">90</field>
+        </record>
+
+        <!--
+            ==============================================================
+            GROUP: Investor
+            ==============================================================
+            Portal-like access. Investors access the platform only via the
+            JSON-RPC API (Node.js backend). They NEVER log in to the Odoo UI.
+
+            Access rules (ir.rule) restrict their reads to their own data.
+            No create/write/unlink access except what is explicitly granted
+            by the API user (group_api) acting on their behalf.
+        -->
+        <record id="group_investor" model="res.groups">
+            <field name="name">Solar / Investor</field>
+            <field name="category_id" ref="module_category_solar"/>
+            <field name="comment">
+                Read-only access to the investor's own partner record
+                and related data (holdings, orders, yield lines).
+                Restricted by ir.rule to own records.
+                Investors NEVER log in to the Odoo admin interface.
+            </field>
+            <field name="implied_ids" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
+        <!--
+            ==============================================================
+            GROUP: Asset Manager
+            ==============================================================
+            Internal Odoo user managing solar assets (creation, approval,
+            deployment on-chain, documentation).
+        -->
+        <record id="group_asset_manager" model="res.groups">
+            <field name="name">Solar / Asset Manager</field>
+            <field name="category_id" ref="module_category_solar"/>
+            <field name="comment">
+                Full CRUD on solar.asset and related documents.
+                Read-only on investor data (res.partner).
+                Cannot approve KYC or manage compliance alerts.
+            </field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <!--
+            ==============================================================
+            GROUP: Finance
+            ==============================================================
+            Internal user managing payments, payouts and yield distributions.
+        -->
+        <record id="group_finance" model="res.groups">
+            <field name="name">Solar / Finance</field>
+            <field name="category_id" ref="module_category_solar"/>
+            <field name="comment">
+                Validates yield distributions, triggers payouts, reconciles
+                Stripe payments. Read access to investor data. Cannot
+                approve KYC decisions.
+            </field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <!--
+            ==============================================================
+            GROUP: Compliance
+            ==============================================================
+            Internal user with full access across all solar_* models.
+            Approves / rejects KYC, manages AML alerts, can suspend accounts,
+            reads the full audit log.
+        -->
+        <record id="group_compliance" model="res.groups">
+            <field name="name">Solar / Compliance</field>
+            <field name="category_id" ref="module_category_solar"/>
+            <field name="comment">
+                Full access: KYC decisions, AML alerts, account suspension,
+                audit log read, asset approval. Supergroup over all solar_* models.
+            </field>
+            <!-- Compliance officers are also allowed to read the audit log -->
+            <field name="implied_ids" eval="[
+                (4, ref('base.group_user')),
+                (4, ref('solar_audit.group_audit_reader')),
+            ]"/>
+        </record>
+
+        <!--
+            ==============================================================
+            GROUP: API (Node.js backend technical user)
+            ==============================================================
+            Technical account used by the Node.js backend to call Odoo via
+            JSON-RPC. Granted broad create/write access but restricted by
+            each model's ir.rule. Never interacts with the Odoo UI.
+        -->
+        <record id="group_api" model="res.groups">
+            <field name="name">Solar / API Client</field>
+            <field name="category_id" ref="module_category_solar"/>
+            <field name="comment">
+                Technical account for the Node.js backend (ODOO_API_USER env var).
+                Can create and write on all solar_* models.
+                Can write audit log entries (group_audit_writer implied).
+                NEVER grant this group to a human user.
+            </field>
+            <field name="implied_ids" eval="[
+                (4, ref('base.group_user')),
+                (4, ref('solar_audit.group_audit_writer')),
+            ]"/>
+        </record>
+
+        <!--
+            ==============================================================
+            System administrators automatically get compliance-level access.
+            ==============================================================
+        -->
+        <record id="base.group_system" model="res.groups">
+            <field name="implied_ids" eval="[
+                (4, ref('group_compliance')),
+                (4, ref('group_api')),
+            ]"/>
+        </record>
+
+    </data>
+</odoo>

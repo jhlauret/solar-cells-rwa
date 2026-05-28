@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Tree view (read-only, no create/edit/delete buttons)         -->
+    <!-- ============================================================ -->
+    <record id="view_solar_audit_log_tree" model="ir.ui.view">
+        <field name="name">solar.audit.log.tree</field>
+        <field name="model">solar.audit.log</field>
+        <field name="arch" type="xml">
+            <tree string="Audit Log"
+                  create="false"
+                  edit="false"
+                  delete="false"
+                  duplicate="false"
+                  default_order="timestamp desc">
+                <field name="timestamp"/>
+                <field name="actor_type"/>
+                <field name="actor_name"/>
+                <field name="action_code"/>
+                <field name="subject_model"/>
+                <field name="subject_id"/>
+                <field name="subject_uuid" optional="hide"/>
+                <field name="request_ip" optional="hide"/>
+                <field name="request_trace_id" optional="hide"/>
+                <field name="on_chain_tx_hash" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Form view (read-only)                                         -->
+    <!-- ============================================================ -->
+    <record id="view_solar_audit_log_form" model="ir.ui.view">
+        <field name="name">solar.audit.log.form</field>
+        <field name="model">solar.audit.log</field>
+        <field name="arch" type="xml">
+            <form string="Audit Log Entry"
+                  create="false"
+                  edit="false"
+                  delete="false"
+                  duplicate="false">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="action_code" string="Action"/>
+                        <h1>
+                            <field name="action_code" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="When">
+                            <field name="timestamp" readonly="1"/>
+                            <field name="uuid" readonly="1"/>
+                        </group>
+                        <group string="Who">
+                            <field name="actor_type" readonly="1"/>
+                            <field name="actor_name" readonly="1"/>
+                            <field name="actor_id" readonly="1" groups="base.group_no_one"/>
+                        </group>
+                    </group>
+                    <group string="Subject">
+                        <field name="subject_model" readonly="1"/>
+                        <field name="subject_id" readonly="1"/>
+                        <field name="subject_uuid" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="State diff">
+                            <group>
+                                <field name="before_state" widget="json" readonly="1"/>
+                                <field name="after_state" widget="json" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Request metadata">
+                            <group>
+                                <field name="request_ip" readonly="1"/>
+                                <field name="request_user_agent" readonly="1"/>
+                                <field name="request_trace_id" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="External references">
+                            <group>
+                                <field name="redis_event_id" readonly="1"/>
+                                <field name="on_chain_tx_hash" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Search view with filters                                      -->
+    <!-- ============================================================ -->
+    <record id="view_solar_audit_log_search" model="ir.ui.view">
+        <field name="name">solar.audit.log.search</field>
+        <field name="model">solar.audit.log</field>
+        <field name="arch" type="xml">
+            <search string="Search Audit Log">
+                <field name="action_code"/>
+                <field name="actor_name"/>
+                <field name="subject_model"/>
+                <field name="subject_uuid"/>
+                <field name="request_trace_id"/>
+
+                <separator/>
+                <filter string="Today"
+                        name="filter_today"
+                        domain="[('timestamp','&gt;=',(context_today()).strftime('%Y-%m-%d 00:00:00'))]"/>
+                <filter string="Last 7 days"
+                        name="filter_7d"
+                        domain="[('timestamp','&gt;=',(context_today() - relativedelta(days=7)).strftime('%Y-%m-%d 00:00:00'))]"/>
+                <filter string="Last 30 days"
+                        name="filter_30d"
+                        domain="[('timestamp','&gt;=',(context_today() - relativedelta(days=30)).strftime('%Y-%m-%d 00:00:00'))]"/>
+
+                <separator/>
+                <filter string="By internal user"
+                        name="filter_actor_user"
+                        domain="[('actor_type','=','user')]"/>
+                <filter string="By API client"
+                        name="filter_actor_api"
+                        domain="[('actor_type','=','api_client')]"/>
+                <filter string="By system"
+                        name="filter_actor_system"
+                        domain="[('actor_type','=','system')]"/>
+
+                <separator/>
+                <filter string="With on-chain TX"
+                        name="filter_on_chain"
+                        domain="[('on_chain_tx_hash','!=',False)]"/>
+
+                <group expand="0" string="Group by">
+                    <filter string="Action code"
+                            name="group_action_code"
+                            context="{'group_by':'action_code'}"/>
+                    <filter string="Subject model"
+                            name="group_subject_model"
+                            context="{'group_by':'subject_model'}"/>
+                    <filter string="Actor type"
+                            name="group_actor_type"
+                            context="{'group_by':'actor_type'}"/>
+                    <filter string="Day"
+                            name="group_day"
+                            context="{'group_by':'timestamp:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Action — Window to display the audit log                      -->
+    <!-- ============================================================ -->
+    <record id="action_solar_audit_log" model="ir.actions.act_window">
+        <field name="name">Audit Log</field>
+        <field name="res_model">solar.audit.log</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_solar_audit_log_search"/>
+        <field name="context">{'search_default_filter_7d': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No audit entries yet.
+            </p>
+            <p>
+                Audit entries are recorded automatically by every
+                <code>solar_*</code> addon when sensitive business actions occur.
+                They cannot be created manually from this interface.
+            </p>
+        </field>
+    </record>
+
+</odoo>

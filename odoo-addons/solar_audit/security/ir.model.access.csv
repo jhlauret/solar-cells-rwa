@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_solar_audit_log_reader,solar.audit.log.reader,model_solar_audit_log,solar_audit.group_audit_reader,1,0,0,0
+access_solar_audit_log_writer,solar.audit.log.writer,model_solar_audit_log,solar_audit.group_audit_writer,1,0,1,0
+access_solar_audit_log_admin,solar.audit.log.admin,model_solar_audit_log,base.group_system,1,0,1,0

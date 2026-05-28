@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!--
+            Investment order reference: INV-2025-00001
+        -->
+        <record id="seq_solar_investment_order" model="ir.sequence">
+            <field name="name">Solar Investment Order</field>
+            <field name="code">solar.investment.order</field>
+            <field name="prefix">INV-%(year)s-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+        </record>
+
+        <!--
+            Payment transaction reference: PAY-2025-00001
+        -->
+        <record id="seq_solar_payment_transaction" model="ir.sequence">
+            <field name="name">Solar Payment Transaction</field>
+            <field name="code">solar.payment.transaction</field>
+            <field name="prefix">PAY-%(year)s-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+        </record>
+
+        <!--
+            Marketplace order reference: MKT-2025-00001
+        -->
+        <record id="seq_solar_market_order" model="ir.sequence">
+            <field name="name">Solar Market Order</field>
+            <field name="code">solar.market.order</field>
+            <field name="prefix">MKT-%(year)s-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+        </record>
+
+        <!--
+            Marketplace trade reference: TRD-2025-00001
+        -->
+        <record id="seq_solar_market_trade" model="ir.sequence">
+            <field name="name">Solar Market Trade</field>
+            <field name="code">solar.market.trade</field>
+            <field name="prefix">TRD-%(year)s-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+        </record>
+
+        <!--
+            Yield distribution reference: YLD-2025-Q1-00001
+        -->
+        <record id="seq_solar_yield_distribution" model="ir.sequence">
+            <field name="name">Solar Yield Distribution</field>
+            <field name="code">solar.yield.distribution</field>
+            <field name="prefix">YLD-%(year)s-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+        </record>
+
+        <!--
+            KYC case reference: KYC-2025-00001
+        -->
+        <record id="seq_solar_kyc_case" model="ir.sequence">
+            <field name="name">Solar KYC Case</field>
+            <field name="code">solar.kyc.case</field>
+            <field name="prefix">KYC-%(year)s-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+        </record>
+
+    </data>
+</odoo>

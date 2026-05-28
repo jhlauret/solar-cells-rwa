@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Root menu "Solar" — defined here in solar_core (foundation addon).
+        ALL other solar_* addons reference this via ref('solar_core.menu_solar_root').
+        This is the same ID as the one already declared in solar_audit,
+        so we inherit + adjust visibility here.
+    -->
+
+    <!-- Extends the root menu visibility to all Solar groups -->
+    <record id="solar_audit.menu_solar_root" model="ir.ui.menu">
+        <field name="groups_id" eval="[
+            (4, ref('solar_core.group_investor')),
+            (4, ref('solar_core.group_asset_manager')),
+            (4, ref('solar_core.group_finance')),
+            (4, ref('solar_core.group_compliance')),
+            (4, ref('solar_core.group_api')),
+            (4, ref('base.group_system')),
+        ]"/>
+    </record>
+
+    <!-- ── INVESTORS section ───────────────────────────────────────── -->
+    <menuitem id="menu_solar_investor_root"
+              name="Investors"
+              parent="solar_audit.menu_solar_root"
+              sequence="5"
+              groups="solar_core.group_compliance,
+                      solar_core.group_asset_manager,
+                      base.group_system"/>
+
+    <menuitem id="menu_solar_investor_all"
+              name="All investors"
+              parent="menu_solar_investor_root"
+              action="action_solar_investor_all"
+              sequence="10"/>
+
+    <menuitem id="menu_solar_investor_pending"
+              name="Pending confirmation"
+              parent="menu_solar_investor_root"
+              action="action_solar_investor_pending"
+              sequence="20"/>
+
+    <menuitem id="menu_solar_investor_suspended"
+              name="Suspended"
+              parent="menu_solar_investor_root"
+              action="action_solar_investor_suspended"
+              sequence="30"/>
+
+</odoo>

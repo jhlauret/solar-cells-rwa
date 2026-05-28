@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Category: Solar -->
+        <record id="module_category_solar" model="ir.module.category">
+            <field name="name">Solar</field>
+            <field name="description">SolarCells RWA platform groups.</field>
+            <field name="sequence">90</field>
+        </record>
+
+        <!-- Group: Audit Reader -->
+        <!-- Members can view the audit log (read-only). Granted to compliance
+             and finance roles in higher-level addons. -->
+        <record id="group_audit_reader" model="res.groups">
+            <field name="name">Solar / Audit Reader</field>
+            <field name="category_id" ref="module_category_solar"/>
+            <field name="comment">
+                Read-only access to the immutable audit log
+                (solar.audit.log). Granted by default to system administrators.
+                Compliance officers should be added to this group as well.
+            </field>
+            <field name="implied_ids" eval="[]"/>
+        </record>
+
+        <!-- Group: Audit Writer (API) -->
+        <!-- Members can CREATE audit entries (write only) via create_audit_entry().
+             This group is granted to the technical API user used by the Node.js
+             backend, plus to system. No human is meant to be in this group. -->
+        <record id="group_audit_writer" model="res.groups">
+            <field name="name">Solar / Audit Writer (API)</field>
+            <field name="category_id" ref="module_category_solar"/>
+            <field name="comment">
+                Permission to create audit log entries via the
+                create_audit_entry() API. Intended for the technical Node.js
+                API user only. No write or delete permission is granted by
+                this group — those operations are blocked at the model level.
+            </field>
+        </record>
+
+        <!-- System administrators automatically read the audit log -->
+        <record id="base.group_system" model="res.groups">
+            <field name="implied_ids" eval="[(4, ref('group_audit_reader'))]"/>
+        </record>
+
+    </data>
+</odoo>
