@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- LIST                                                           -->
+    <!-- ============================================================ -->
+    <record id="view_solar_payment_tree" model="ir.ui.view">
+        <field name="name">solar.payment.transaction.tree</field>
+        <field name="model">solar.payment.transaction</field>
+        <field name="arch" type="xml">
+            <tree string="Payment Transactions"
+                  decoration-success="state == 'succeeded'"
+                  decoration-warning="state in ['initiated', 'processing']"
+                  decoration-danger="state == 'failed'"
+                  decoration-muted="state in ['cancelled', 'refunded']"
+                  default_order="initiated_at desc">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="direction" widget="badge"
+                       options="{'classes': {'inbound': 'success', 'outbound': 'warning'}}"/>
+                <field name="transaction_type"/>
+                <field name="payment_method" optional="show"/>
+                <field name="fiat_amount"/>
+                <field name="fees_amount" optional="hide"/>
+                <field name="net_amount" optional="show"/>
+                <field name="state" widget="badge"/>
+                <field name="initiated_at"/>
+                <field name="succeeded_at" optional="show"/>
+                <field name="stripe_intent_id" optional="hide" groups="base.group_no_one"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- FORM                                                           -->
+    <!-- ============================================================ -->
+    <record id="view_solar_payment_form" model="ir.ui.view">
+        <field name="name">solar.payment.transaction.form</field>
+        <field name="model">solar.payment.transaction</field>
+        <field name="arch" type="xml">
+            <form string="Payment Transaction">
+                <header>
+                    <button name="action_mark_processing"
+                            string="Mark processing"
+                            states="initiated"
+                            type="object"
+                            groups="solar_core.group_finance,solar_core.group_compliance"/>
+                    <button name="action_mark_succeeded"
+                            string="Mark succeeded"
+                            states="processing"
+                            type="object"
+                            class="oe_highlight"
+                            groups="solar_core.group_finance,solar_core.group_compliance"/>
+                    <button name="action_mark_failed"
+                            string="Mark failed"
+                            states="initiated,processing"
+                            type="object"
+                            class="btn-danger"
+                            groups="solar_core.group_compliance"/>
+                    <button name="action_cancel"
+                            string="Cancel"
+                            states="initiated"
+                            type="object"
+                            groups="solar_core.group_compliance"/>
+                    <button name="action_refund"
+                            string="Refund"
+                            states="succeeded"
+                            type="object"
+                            class="btn-warning"
+                            groups="solar_core.group_compliance"
+                            confirm="Issue a full refund? A new outbound transaction will be created."/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="initiated,processing,succeeded"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <group string="Parties &amp; classification">
+                            <field name="name" readonly="1"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="direction" readonly="1" widget="badge"
+                                   options="{'classes':{'inbound':'success','outbound':'warning'}}"/>
+                            <field name="transaction_type" readonly="1"/>
+                            <field name="payment_method"/>
+                        </group>
+                        <group string="Amounts">
+                            <field name="currency_id" readonly="1"/>
+                            <field name="fiat_amount" readonly="1"/>
+                            <field name="fees_amount"/>
+                            <field name="net_amount" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Provider references">
+                            <group>
+                                <group string="Stripe">
+                                    <field name="stripe_intent_id" readonly="1"/>
+                                    <field name="stripe_charge_id"  readonly="1"/>
+                                    <field name="stripe_payout_id"  readonly="1"/>
+                                </group>
+                                <group string="Bridge">
+                                    <field name="bridge_conversion_id" readonly="1"/>
+                                    <field name="bridge_payment_id"    readonly="1"/>
+                                </group>
+                            </group>
+                            <group string="Stablecoin conversion">
+                                <field name="stablecoin_amount"/>
+                                <field name="stablecoin_type"/>
+                                <field name="stablecoin_rate"/>
+                            </group>
+                        </page>
+
+                        <page string="Banking (outbound)">
+                            <group>
+                                <field name="iban_used" readonly="1"/>
+                            </group>
+                        </page>
+
+                        <page string="Timeline">
+                            <group>
+                                <field name="initiated_at"  readonly="1"/>
+                                <field name="processing_at" readonly="1"/>
+                                <field name="succeeded_at"  readonly="1"/>
+                                <field name="failed_at"     readonly="1"/>
+                                <field name="failure_reason" readonly="1"
+                                       invisible="not failure_reason"/>
+                            </group>
+                        </page>
+
+                        <page string="Metadata" groups="base.group_no_one">
+                            <field name="metadata" widget="json" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- SEARCH                                                         -->
+    <!-- ============================================================ -->
+    <record id="view_solar_payment_search" model="ir.ui.view">
+        <field name="name">solar.payment.transaction.search</field>
+        <field name="model">solar.payment.transaction</field>
+        <field name="arch" type="xml">
+            <search string="Search transactions">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="stripe_intent_id" string="Stripe intent"/>
+
+                <separator/>
+                <filter string="Inbound"    name="inbound"    domain="[('direction','=','inbound')]"/>
+                <filter string="Outbound"   name="outbound"   domain="[('direction','=','outbound')]"/>
+
+                <separator/>
+                <filter string="Initiated"  name="initiated"  domain="[('state','=','initiated')]"/>
+                <filter string="Processing" name="processing" domain="[('state','=','processing')]"/>
+                <filter string="Succeeded"  name="succeeded"  domain="[('state','=','succeeded')]"/>
+                <filter string="Failed"     name="failed"     domain="[('state','=','failed')]"/>
+
+                <separator/>
+                <filter string="Subscriptions"
+                        name="subscriptions"
+                        domain="[('transaction_type','=','subscription')]"/>
+                <filter string="Yield distributions"
+                        name="yield"
+                        domain="[('transaction_type','=','yield_distribution')]"/>
+
+                <group string="Group by">
+                    <filter string="Direction" name="group_direction" context="{'group_by':'direction'}"/>
+                    <filter string="Type"      name="group_type"      context="{'group_by':'transaction_type'}"/>
+                    <filter string="State"     name="group_state"     context="{'group_by':'state'}"/>
+                    <filter string="Method"    name="group_method"    context="{'group_by':'payment_method'}"/>
+                    <filter string="Day"       name="group_day"       context="{'group_by':'initiated_at:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- ACTIONS                                                        -->
+    <!-- ============================================================ -->
+    <record id="action_solar_payment_all" model="ir.actions.act_window">
+        <field name="name">All Transactions</field>
+        <field name="res_model">solar.payment.transaction</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_solar_payment_search"/>
+    </record>
+
+    <record id="action_solar_payment_pending" model="ir.actions.act_window">
+        <field name="name">Pending transactions</field>
+        <field name="res_model">solar.payment.transaction</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('state','in',['initiated','processing'])]</field>
+    </record>
+
+    <record id="action_solar_payment_failed" model="ir.actions.act_window">
+        <field name="name">Failed transactions</field>
+        <field name="res_model">solar.payment.transaction</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('state','=','failed')]</field>
+    </record>
+
+    <!-- ir.rule: investors see only their own transactions -->
+    <record id="rule_payment_investor_own" model="ir.rule">
+        <field name="name">Investors see only their own transactions</field>
+        <field name="model_id" ref="solar_payment.model_solar_payment_transaction"/>
+        <field name="groups" eval="[(4, ref('solar_core.group_investor'))]"/>
+        <field name="domain_force">[('partner_id.user_ids', 'in', [user.id])]</field>
+    </record>
+
+</odoo>

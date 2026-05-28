@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_solar_investment_order_tree" model="ir.ui.view">
+        <field name="name">solar.investment.order.tree</field>
+        <field name="model">solar.investment.order</field>
+        <field name="arch" type="xml">
+            <tree string="Investment Orders"
+                  decoration-success="state == 'settled'"
+                  decoration-warning="state in ['submitted','payment_pending','payment_processing','payment_succeeded']"
+                  decoration-muted="state in ['cancelled','refunded']">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="asset_id"/>
+                <field name="cells_requested"/>
+                <field name="gross_amount"/>
+                <field name="fees_amount" optional="hide"/>
+                <field name="net_amount"  optional="show"/>
+                <field name="payment_method"/>
+                <field name="state" widget="badge"/>
+                <field name="created_at"/>
+                <field name="settled_at" optional="show"/>
+                <field name="expires_at" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_solar_investment_order_form" model="ir.ui.view">
+        <field name="name">solar.investment.order.form</field>
+        <field name="model">solar.investment.order</field>
+        <field name="arch" type="xml">
+            <form string="Investment Order">
+                <header>
+                    <button name="action_submit"
+                            string="Submit order"
+                            states="draft"
+                            type="object"
+                            class="oe_highlight"
+                            groups="solar_core.group_api"/>
+                    <button name="action_create_payment"
+                            string="Create payment"
+                            states="submitted"
+                            type="object"
+                            class="oe_highlight"
+                            groups="solar_core.group_api,solar_core.group_finance"/>
+                    <button name="action_settle"
+                            string="Settle (credit holding)"
+                            states="payment_succeeded"
+                            type="object"
+                            class="oe_highlight"
+                            groups="solar_core.group_finance,solar_core.group_compliance"/>
+                    <button name="action_cancel"
+                            string="Cancel"
+                            type="object"
+                            class="btn-danger"
+                            invisible="state in ['settled','cancelled','refunded']"
+                            groups="solar_core.group_compliance"/>
+                    <button name="action_refund"
+                            string="Refund"
+                            states="settled"
+                            type="object"
+                            class="btn-warning"
+                            groups="solar_core.group_compliance"
+                            confirm="Refund this order? Holding cells will be debited."/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,submitted,payment_pending,settled"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <group string="Order">
+                            <field name="name" readonly="1"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="asset_id"   readonly="1"/>
+                            <field name="wallet_id"/>
+                        </group>
+                        <group string="Cells &amp; amounts">
+                            <field name="cells_requested"/>
+                            <field name="price_per_cell"/>
+                            <field name="payment_method"/>
+                            <field name="gross_amount" readonly="1"/>
+                            <field name="fees_amount"  readonly="1"/>
+                            <field name="net_amount"   readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Payment">
+                            <field name="payment_transaction_id" readonly="1"/>
+                            <field name="expires_at" readonly="1"/>
+                        </group>
+                        <group string="Timeline">
+                            <field name="created_at"   readonly="1"/>
+                            <field name="submitted_at" readonly="1"/>
+                            <field name="settled_at"   readonly="1"/>
+                            <field name="cancelled_at" readonly="1" invisible="not cancelled_at"/>
+                            <field name="cancel_reason" readonly="1" invisible="not cancel_reason"/>
+                        </group>
+                    </group>
+                </sheet>
+
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_solar_investment_order_search" model="ir.ui.view">
+        <field name="name">solar.investment.order.search</field>
+        <field name="model">solar.investment.order</field>
+        <field name="arch" type="xml">
+            <search string="Search orders">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="asset_id"/>
+                <separator/>
+                <filter string="Settled"          name="settled"   domain="[('state','=','settled')]"/>
+                <filter string="Pending payment"  name="pending"   domain="[('state','in',['submitted','payment_pending','payment_processing'])]"/>
+                <filter string="Cancelled"        name="cancelled" domain="[('state','=','cancelled')]"/>
+                <filter string="Refunded"         name="refunded"  domain="[('state','=','refunded')]"/>
+                <group string="Group by">
+                    <filter string="Asset"   name="group_asset"   context="{'group_by':'asset_id'}"/>
+                    <filter string="State"   name="group_state"   context="{'group_by':'state'}"/>
+                    <filter string="Method"  name="group_method"  context="{'group_by':'payment_method'}"/>
+                    <filter string="Day"     name="group_day"     context="{'group_by':'created_at:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_solar_investment_order_all" model="ir.actions.act_window">
+        <field name="name">All Orders</field>
+        <field name="res_model">solar.investment.order</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_solar_investment_order_search"/>
+    </record>
+
+    <record id="action_solar_investment_order_pending" model="ir.actions.act_window">
+        <field name="name">Pending orders</field>
+        <field name="res_model">solar.investment.order</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('state','in',['submitted','payment_pending','payment_processing','payment_succeeded'])]</field>
+    </record>
+
+    <!-- ir.rule: investors see only their own orders -->
+    <record id="rule_investment_order_investor_own" model="ir.rule">
+        <field name="name">Investors see only their own orders</field>
+        <field name="model_id" ref="solar_investment.model_solar_investment_order"/>
+        <field name="groups" eval="[(4, ref('solar_core.group_investor'))]"/>
+        <field name="domain_force">[('partner_id.user_ids', 'in', [user.id])]</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_solar_investment_order_investor,solar.investment.order.investor,model_solar_investment_order,solar_core.group_investor,1,0,0,0
+access_solar_investment_order_finance,solar.investment.order.finance,model_solar_investment_order,solar_core.group_finance,1,1,0,0
+access_solar_investment_order_compliance,solar.investment.order.compliance,model_solar_investment_order,solar_core.group_compliance,1,1,0,0
+access_solar_investment_order_api,solar.investment.order.api,model_solar_investment_order,solar_core.group_api,1,1,1,0

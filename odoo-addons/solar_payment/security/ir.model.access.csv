@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_solar_payment_transaction_investor,solar.payment.transaction.investor,model_solar_payment_transaction,solar_core.group_investor,1,0,0,0
+access_solar_payment_transaction_finance,solar.payment.transaction.finance,model_solar_payment_transaction,solar_core.group_finance,1,1,0,0
+access_solar_payment_transaction_compliance,solar.payment.transaction.compliance,model_solar_payment_transaction,solar_core.group_compliance,1,1,0,0
+access_solar_payment_transaction_api,solar.payment.transaction.api,model_solar_payment_transaction,solar_core.group_api,1,1,1,0

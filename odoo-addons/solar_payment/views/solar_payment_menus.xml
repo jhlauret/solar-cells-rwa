@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_solar_payment_root"
+              name="Payments"
+              parent="solar_audit.menu_solar_root"
+              sequence="30"
+              groups="solar_core.group_finance,
+                      solar_core.group_compliance,
+                      base.group_system"/>
+
+    <menuitem id="menu_solar_payment_all"
+              name="All transactions"
+              parent="menu_solar_payment_root"
+              action="action_solar_payment_all"
+              sequence="10"/>
+
+    <menuitem id="menu_solar_payment_pending"
+              name="Pending"
+              parent="menu_solar_payment_root"
+              action="action_solar_payment_pending"
+              sequence="20"/>
+
+    <menuitem id="menu_solar_payment_failed"
+              name="Failed"
+              parent="menu_solar_payment_root"
+              action="action_solar_payment_failed"
+              sequence="30"/>
+
+</odoo>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_solar_investment_root"
+              name="Investment Orders"
+              parent="solar_audit.menu_solar_root"
+              sequence="15"
+              groups="solar_core.group_finance,
+                      solar_core.group_compliance,
+                      solar_core.group_asset_manager,
+                      base.group_system"/>
+
+    <menuitem id="menu_solar_investment_all"
+              name="All orders"
+              parent="menu_solar_investment_root"
+              action="action_solar_investment_order_all"
+              sequence="10"/>
+
+    <menuitem id="menu_solar_investment_pending"
+              name="Pending"
+              parent="menu_solar_investment_root"
+              action="action_solar_investment_order_pending"
+              sequence="20"/>
+
+</odoo>
