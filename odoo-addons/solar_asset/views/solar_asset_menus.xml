@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_solar_asset_root"
+              name="Solar Assets"
+              parent="solar_audit.menu_solar_root"
+              sequence="10"
+              groups="solar_core.group_asset_manager,
+                      solar_core.group_compliance,
+                      solar_core.group_api,
+                      base.group_system"/>
+
+    <menuitem id="menu_solar_asset_all"
+              name="All assets"
+              parent="menu_solar_asset_root"
+              action="action_solar_asset_all"
+              sequence="10"/>
+
+    <menuitem id="menu_solar_asset_financing"
+              name="In financing"
+              parent="menu_solar_asset_root"
+              action="action_solar_asset_financing"
+              sequence="20"/>
+
+    <menuitem id="menu_solar_asset_production"
+              name="In production"
+              parent="menu_solar_asset_root"
+              action="action_solar_asset_in_production"
+              sequence="30"/>
+
+</odoo>

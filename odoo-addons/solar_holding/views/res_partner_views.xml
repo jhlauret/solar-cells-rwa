@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_partner_form_holding_inherit" model="ir.ui.view">
+        <field name="name">res.partner.form.holding.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="solar_core.view_partner_form_solar_core_inherit"/>
+        <field name="arch" type="xml">
+
+            <!-- Holdings stat button -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_holdings" type="object"
+                        class="oe_stat_button" icon="fa-bar-chart"
+                        invisible="not x_is_investor"
+                        groups="solar_core.group_compliance,base.group_system">
+                    <field name="x_holding_count" widget="statinfo" string="Positions"/>
+                </button>
+            </xpath>
+
+            <!-- Portfolio summary in Investor tab -->
+            <xpath expr="//page[@name='solar_investor']" position="inside">
+                <group string="Portfolio summary"
+                       invisible="not x_is_investor">
+                    <field name="x_total_invested"       readonly="1"/>
+                    <field name="x_portfolio_value"      readonly="1"/>
+                    <field name="x_total_yield_received" readonly="1"/>
+                </group>
+
+                <page string="Holdings"
+                      name="solar_holdings"
+                      invisible="not x_is_investor">
+                    <field name="x_holding_ids" readonly="1">
+                        <tree>
+                            <field name="asset_id"/>
+                            <field name="cells_owned"/>
+                            <field name="average_acquisition_price"/>
+                            <field name="total_invested"/>
+                            <field name="current_value"/>
+                            <field name="total_yield_received" optional="show"/>
+                            <field name="state" widget="badge"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

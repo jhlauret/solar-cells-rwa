@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_solar_asset_form_holding_inherit" model="ir.ui.view">
+        <field name="name">solar.asset.form.holding.inherit</field>
+        <field name="model">solar.asset</field>
+        <field name="inherit_id" ref="solar_asset.view_solar_asset_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Stat button: investors count -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_holdings" type="object"
+                        class="oe_stat_button" icon="fa-users">
+                    <field name="holding_count" widget="statinfo" string="Investors"/>
+                </button>
+            </xpath>
+
+            <!-- Holdings tab -->
+            <xpath expr="//page[@string='Content']" position="before">
+                <page string="Holdings">
+                    <field name="holding_ids" readonly="1">
+                        <tree>
+                            <field name="partner_id"/>
+                            <field name="cells_owned"/>
+                            <field name="average_acquisition_price"/>
+                            <field name="total_invested"/>
+                            <field name="total_yield_received"/>
+                            <field name="state" widget="badge"/>
+                            <field name="reinvest_enabled" widget="boolean" optional="hide"/>
+                            <field name="last_updated_at" optional="show"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

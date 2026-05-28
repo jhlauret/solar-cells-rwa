@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_solar_holding_investor,solar.holding.investor,model_solar_holding,solar_core.group_investor,1,0,0,0
+access_solar_holding_compliance,solar.holding.compliance,model_solar_holding,solar_core.group_compliance,1,1,0,0
+access_solar_holding_api,solar.holding.api,model_solar_holding,solar_core.group_api,1,1,1,0

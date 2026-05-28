@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_solar_holding_tree" model="ir.ui.view">
+        <field name="name">solar.holding.tree</field>
+        <field name="model">solar.holding</field>
+        <field name="arch" type="xml">
+            <tree string="Holdings"
+                  decoration-success="state == 'active'"
+                  decoration-muted="state == 'closed'">
+                <field name="partner_id"/>
+                <field name="asset_id"/>
+                <field name="cells_owned"/>
+                <field name="average_acquisition_price"/>
+                <field name="total_invested"/>
+                <field name="total_yield_received" optional="show"/>
+                <field name="current_value" optional="show"/>
+                <field name="unrealised_gain" optional="hide"/>
+                <field name="state" widget="badge"/>
+                <field name="reinvest_enabled" widget="boolean" optional="hide"/>
+                <field name="first_acquired_at" optional="hide"/>
+                <field name="last_updated_at" optional="show"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_solar_holding_form" model="ir.ui.view">
+        <field name="name">solar.holding.form</field>
+        <field name="model">solar.holding</field>
+        <field name="arch" type="xml">
+            <form string="Holding">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="display_name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Position">
+                            <field name="partner_id" readonly="1"/>
+                            <field name="asset_id"   readonly="1"/>
+                            <field name="wallet_id"/>
+                            <field name="state" widget="badge"/>
+                        </group>
+                        <group string="Cells">
+                            <field name="cells_owned" readonly="1"/>
+                            <field name="average_acquisition_price" readonly="1"/>
+                            <field name="current_value"  readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Financials">
+                            <field name="total_invested"        readonly="1"/>
+                            <field name="total_yield_received"  readonly="1"/>
+                            <field name="unrealised_gain"       readonly="1"/>
+                        </group>
+                        <group string="Settings">
+                            <field name="reinvest_enabled" widget="boolean_toggle"/>
+                            <field name="first_acquired_at" readonly="1"/>
+                            <field name="last_updated_at"   readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_solar_holding_search" model="ir.ui.view">
+        <field name="name">solar.holding.search</field>
+        <field name="model">solar.holding</field>
+        <field name="arch" type="xml">
+            <search string="Search holdings">
+                <field name="partner_id"/>
+                <field name="asset_id"/>
+                <separator/>
+                <filter string="Active"  name="active"  domain="[('state','=','active')]"/>
+                <filter string="Closed"  name="closed"  domain="[('state','=','closed')]"/>
+                <filter string="Auto-reinvest" name="reinvest" domain="[('reinvest_enabled','=',True)]"/>
+                <group string="Group by">
+                    <filter string="Asset"    name="group_asset"   context="{'group_by':'asset_id'}"/>
+                    <filter string="Investor" name="group_partner" context="{'group_by':'partner_id'}"/>
+                    <filter string="State"    name="group_state"   context="{'group_by':'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_solar_holding_all" model="ir.actions.act_window">
+        <field name="name">All Holdings</field>
+        <field name="res_model">solar.holding</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_solar_holding_search"/>
+    </record>
+
+    <!-- ir.rule: investors see only their own holdings -->
+    <record id="rule_holding_investor_own" model="ir.rule">
+        <field name="name">Investors see only their own holdings</field>
+        <field name="model_id" ref="solar_holding.model_solar_holding"/>
+        <field name="groups" eval="[(4, ref('solar_core.group_investor'))]"/>
+        <field name="domain_force">[('partner_id.user_ids', 'in', [user.id])]</field>
+    </record>
+
+</odoo>

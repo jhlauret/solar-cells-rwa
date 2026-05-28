@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_solar_asset_investor,solar.asset.investor,model_solar_asset,solar_core.group_investor,1,0,0,0
+access_solar_asset_manager,solar.asset.manager,model_solar_asset,solar_core.group_asset_manager,1,1,1,0
+access_solar_asset_compliance,solar.asset.compliance,model_solar_asset,solar_core.group_compliance,1,1,0,0
+access_solar_asset_api,solar.asset.api,model_solar_asset,solar_core.group_api,1,1,0,0
+access_solar_asset_document_investor,solar.asset.document.investor,model_solar_asset_document,solar_core.group_investor,1,0,0,0
+access_solar_asset_document_manager,solar.asset.document.manager,model_solar_asset_document,solar_core.group_asset_manager,1,1,1,1
+access_solar_asset_document_api,solar.asset.document.api,model_solar_asset_document,solar_core.group_api,1,1,1,0

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!--
+            CRON: Auto-mature assets
+            Daily. Transitions in_production assets whose project_end_date
+            has passed to the 'mature' state.
+        -->
+        <record id="ir_cron_auto_mature" model="ir.cron">
+            <field name="name">Solar Asset: Auto-transition to mature</field>
+            <field name="model_id" ref="solar_asset.model_solar_asset"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_auto_mature_assets()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active">True</field>
+            <field name="user_id" ref="base.user_root"/>
+        </record>
+
+    </data>
+</odoo>
