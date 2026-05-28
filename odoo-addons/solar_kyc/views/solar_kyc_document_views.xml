@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_solar_kyc_document_tree" model="ir.ui.view">
+        <field name="name">solar.kyc.document.tree</field>
+        <field name="model">solar.kyc.document</field>
+        <field name="arch" type="xml">
+            <tree string="KYC Documents"
+                  decoration-success="state == 'validated'"
+                  decoration-warning="state == 'pending'"
+                  decoration-danger="state == 'rejected'"
+                  decoration-muted="state == 'expired'">
+                <field name="case_id"/>
+                <field name="document_type"/>
+                <field name="state" widget="badge"/>
+                <field name="mime_type"/>
+                <field name="file_size_bytes" optional="show"/>
+                <field name="uploaded_at"/>
+                <field name="reviewed_at" optional="show"/>
+                <field name="reviewed_by" optional="show"/>
+                <field name="uuid" optional="hide" groups="base.group_no_one"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_solar_kyc_document_form" model="ir.ui.view">
+        <field name="name">solar.kyc.document.form</field>
+        <field name="model">solar.kyc.document</field>
+        <field name="arch" type="xml">
+            <form string="KYC Document">
+                <header>
+                    <button name="action_validate_document"
+                            string="Validate"
+                            states="pending"
+                            type="object"
+                            class="oe_highlight"
+                            groups="solar_kyc.group_kyc_operator,solar_core.group_compliance"/>
+                    <button name="action_reject_document"
+                            string="Reject"
+                            states="pending"
+                            type="object"
+                            class="btn-danger"
+                            groups="solar_kyc.group_kyc_operator,solar_core.group_compliance"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,validated"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Document">
+                            <field name="case_id"/>
+                            <field name="document_type"/>
+                            <field name="state" widget="badge"/>
+                        </group>
+                        <group string="File">
+                            <field name="mime_type"/>
+                            <field name="file_size_bytes"/>
+                            <field name="sha256_hash" readonly="1"/>
+                            <field name="minio_path" readonly="1"
+                                   groups="base.group_no_one"/>
+                        </group>
+                    </group>
+                    <group string="Review">
+                        <field name="reviewed_at" readonly="1"/>
+                        <field name="reviewed_by" readonly="1"/>
+                        <field name="rejection_reason" readonly="1"
+                               invisible="not rejection_reason"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_solar_kyc_documents" model="ir.actions.act_window">
+        <field name="name">KYC Documents</field>
+        <field name="res_model">solar.kyc.document</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+</odoo>

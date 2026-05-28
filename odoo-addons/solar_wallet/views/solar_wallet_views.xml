@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- LIST VIEW                                                      -->
+    <!-- ============================================================ -->
+    <record id="view_solar_wallet_tree" model="ir.ui.view">
+        <field name="name">solar.wallet.tree</field>
+        <field name="model">solar.wallet</field>
+        <field name="arch" type="xml">
+            <tree string="Wallets"
+                  decoration-success="state == 'active'"
+                  decoration-warning="state in ['pending', 'frozen']"
+                  decoration-danger="state == 'failed'"
+                  decoration-muted="state == 'closed'">
+                <field name="partner_id"/>
+                <field name="address"/>
+                <field name="wallet_type"/>
+                <field name="provider"/>
+                <field name="network"/>
+                <field name="state" widget="badge"/>
+                <field name="whitelisted_on_chain" widget="boolean" optional="show"/>
+                <field name="is_primary" widget="boolean" optional="show"/>
+                <field name="activated_at" optional="show"/>
+                <field name="frozen_at"    optional="hide"/>
+                <field name="uuid" optional="hide" groups="base.group_no_one"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- FORM VIEW                                                      -->
+    <!-- ============================================================ -->
+    <record id="view_solar_wallet_form" model="ir.ui.view">
+        <field name="name">solar.wallet.form</field>
+        <field name="model">solar.wallet</field>
+        <field name="arch" type="xml">
+            <form string="Wallet">
+                <header>
+                    <button name="action_activate"
+                            string="Activate"
+                            states="pending"
+                            type="object"
+                            class="oe_highlight"
+                            groups="solar_core.group_api,solar_core.group_compliance"/>
+
+                    <button name="action_whitelist_on_chain"
+                            string="Whitelist on-chain"
+                            type="object"
+                            states="active"
+                            invisible="whitelisted_on_chain"
+                            groups="solar_core.group_compliance,solar_core.group_api"/>
+
+                    <button name="action_freeze"
+                            string="Freeze"
+                            states="active"
+                            type="object"
+                            class="btn-warning"
+                            groups="solar_core.group_compliance"
+                            confirm="Freeze this wallet? The investor will no longer be able to send or receive tokens."/>
+
+                    <button name="action_unfreeze"
+                            string="Unfreeze"
+                            states="frozen"
+                            type="object"
+                            class="oe_highlight"
+                            groups="solar_core.group_compliance"/>
+
+                    <button name="action_close"
+                            string="Close wallet"
+                            states="active,frozen"
+                            type="object"
+                            class="btn-danger"
+                            groups="solar_core.group_compliance"
+                            confirm="Close this wallet permanently? This cannot be undone."/>
+
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,active,closed"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="fa-star"
+                                invisible="not is_primary" type="button">
+                            <span class="o_stat_text">Primary</span>
+                        </button>
+                    </div>
+
+                    <group>
+                        <group string="Owner">
+                            <field name="partner_id"/>
+                            <field name="uuid" readonly="1" groups="base.group_no_one"/>
+                        </group>
+                        <group string="Wallet">
+                            <field name="wallet_type"/>
+                            <field name="provider"/>
+                            <field name="network"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="On-chain">
+                            <field name="address"/>
+                            <field name="provider_vault_id"/>
+                            <field name="whitelisted_on_chain" widget="boolean_toggle"/>
+                            <field name="whitelisted_at" readonly="1"
+                                   invisible="not whitelisted_at"/>
+                        </group>
+                        <group string="Timeline">
+                            <field name="created_at"   readonly="1"/>
+                            <field name="activated_at" readonly="1"/>
+                            <field name="frozen_at"    readonly="1" invisible="not frozen_at"/>
+                            <field name="closed_at"    readonly="1" invisible="not closed_at"/>
+                        </group>
+                    </group>
+
+                    <group string="Compliance" invisible="state not in ['frozen', 'failed']">
+                        <field name="freeze_reason"  readonly="1" invisible="not freeze_reason"/>
+                        <field name="failure_reason" readonly="1" invisible="not failure_reason"/>
+                    </group>
+                </sheet>
+
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- SEARCH VIEW                                                    -->
+    <!-- ============================================================ -->
+    <record id="view_solar_wallet_search" model="ir.ui.view">
+        <field name="name">solar.wallet.search</field>
+        <field name="model">solar.wallet</field>
+        <field name="arch" type="xml">
+            <search string="Search wallets">
+                <field name="partner_id"/>
+                <field name="address"/>
+                <field name="uuid" string="UUID"/>
+
+                <separator/>
+                <filter string="Active"  name="active"  domain="[('state','=','active')]"/>
+                <filter string="Pending" name="pending" domain="[('state','=','pending')]"/>
+                <filter string="Frozen"  name="frozen"  domain="[('state','=','frozen')]"/>
+                <filter string="Closed"  name="closed"  domain="[('state','=','closed')]"/>
+
+                <separator/>
+                <filter string="Not whitelisted"
+                        name="not_whitelisted"
+                        domain="[('state','=','active'),('whitelisted_on_chain','=',False),('address','!=',False)]"/>
+                <filter string="Primary wallets"
+                        name="primary"
+                        domain="[('is_primary','=',True)]"/>
+
+                <group string="Group by">
+                    <filter string="State"    name="group_state"    context="{'group_by':'state'}"/>
+                    <filter string="Provider" name="group_provider" context="{'group_by':'provider'}"/>
+                    <filter string="Network"  name="group_network"  context="{'group_by':'network'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- ACTIONS                                                        -->
+    <!-- ============================================================ -->
+    <record id="action_solar_wallet_all" model="ir.actions.act_window">
+        <field name="name">All Wallets</field>
+        <field name="res_model">solar.wallet</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_solar_wallet_search"/>
+    </record>
+
+    <record id="action_solar_wallet_active" model="ir.actions.act_window">
+        <field name="name">Active wallets</field>
+        <field name="res_model">solar.wallet</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('state','=','active')]</field>
+    </record>
+
+    <record id="action_solar_wallet_frozen" model="ir.actions.act_window">
+        <field name="name">Frozen wallets</field>
+        <field name="res_model">solar.wallet</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('state','=','frozen')]</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_solar_kyc_case_investor,solar.kyc.case.investor,model_solar_kyc_case,solar_core.group_investor,1,0,0,0
+access_solar_kyc_case_kyc_op,solar.kyc.case.kyc_op,model_solar_kyc_case,solar_kyc.group_kyc_operator,1,1,1,0
+access_solar_kyc_case_compliance,solar.kyc.case.compliance,model_solar_kyc_case,solar_core.group_compliance,1,1,1,1
+access_solar_kyc_case_api,solar.kyc.case.api,model_solar_kyc_case,solar_core.group_api,1,1,1,0
+access_solar_kyc_document_investor,solar.kyc.document.investor,model_solar_kyc_document,solar_core.group_investor,1,0,0,0
+access_solar_kyc_document_kyc_op,solar.kyc.document.kyc_op,model_solar_kyc_document,solar_kyc.group_kyc_operator,1,1,1,0
+access_solar_kyc_document_compliance,solar.kyc.document.compliance,model_solar_kyc_document,solar_core.group_compliance,1,1,1,0
+access_solar_kyc_document_api,solar.kyc.document.api,model_solar_kyc_document,solar_core.group_api,1,1,1,0
+access_solar_kyc_decision_investor,solar.kyc.decision.investor,model_solar_kyc_decision,solar_core.group_investor,1,0,0,0
+access_solar_kyc_decision_kyc_op,solar.kyc.decision.kyc_op,model_solar_kyc_decision,solar_kyc.group_kyc_operator,1,0,1,0
+access_solar_kyc_decision_compliance,solar.kyc.decision.compliance,model_solar_kyc_decision,solar_core.group_compliance,1,0,1,0
+access_solar_kyc_decision_api,solar.kyc.decision.api,model_solar_kyc_decision,solar_core.group_api,1,0,1,0

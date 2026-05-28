@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_partner_form_solar_wallet_inherit" model="ir.ui.view">
+        <field name="name">res.partner.form.solar_wallet.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="solar_core.view_partner_form_solar_core_inherit"/>
+        <field name="arch" type="xml">
+
+            <!-- Add wallet stats button in the button box -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_wallets" type="object"
+                        class="oe_stat_button" icon="fa-credit-card"
+                        invisible="not x_is_investor"
+                        groups="solar_core.group_compliance,base.group_system">
+                    <field name="x_wallet_ids" widget="statinfo" string="Wallets"/>
+                </button>
+            </xpath>
+
+            <!-- Add wallet info inside the Investor tab -->
+            <xpath expr="//page[@name='solar_investor']//group[@string='Status']" position="after">
+                <group string="Wallet">
+                    <field name="x_primary_wallet_id"
+                           domain="[('partner_id','=',id),('state','=','active')]"/>
+                    <field name="x_wallet_address" readonly="1"/>
+                    <field name="x_wallet_state"   readonly="1" widget="badge"/>
+                    <field name="x_wallet_whitelisted" widget="boolean" readonly="1"/>
+                </group>
+            </xpath>
+
+            <!-- Add a dedicated Wallets tab -->
+            <xpath expr="//page[@name='solar_investor']" position="after">
+                <page string="Wallets"
+                      name="solar_wallets"
+                      invisible="not x_is_investor"
+                      groups="solar_core.group_compliance,base.group_system">
+                    <field name="x_wallet_ids" readonly="1">
+                        <tree decoration-success="state == 'active'"
+                              decoration-warning="state == 'pending'"
+                              decoration-danger="state in ['frozen', 'failed']"
+                              decoration-muted="state == 'closed'">
+                            <field name="uuid"/>
+                            <field name="wallet_type"/>
+                            <field name="provider"/>
+                            <field name="network"/>
+                            <field name="address"/>
+                            <field name="state" widget="badge"/>
+                            <field name="whitelisted_on_chain" widget="boolean"/>
+                            <field name="is_primary" widget="boolean"/>
+                            <field name="activated_at" optional="show"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- Action to view wallets from a partner record -->
+    <record id="action_partner_view_wallets" model="ir.actions.act_window">
+        <field name="name">Wallets</field>
+        <field name="res_model">solar.wallet</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('partner_id', '=', active_id)]</field>
+        <field name="context">{'default_partner_id': active_id}</field>
+    </record>
+
+</odoo>

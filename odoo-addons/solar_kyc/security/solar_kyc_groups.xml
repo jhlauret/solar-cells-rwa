@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!--
+            GROUP: KYC Operator
+            Handles the KYC review queue: validates/rejects documents,
+            escalates to compliance when needed.
+            Inherits from group_compliance to avoid duplicating rules.
+        -->
+        <record id="group_kyc_operator" model="res.groups">
+            <field name="name">Solar / KYC Operator</field>
+            <field name="category_id" ref="solar_core.module_category_solar"/>
+            <field name="comment">
+                KYC operators review uploaded documents, validate or reject them,
+                and escalate suspicious cases to the compliance team.
+                They can read all KYC cases but only write to document states.
+            </field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+    </data>
+</odoo>

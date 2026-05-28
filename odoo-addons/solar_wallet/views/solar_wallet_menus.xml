@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_solar_wallet_root"
+              name="Wallets"
+              parent="solar_audit.menu_solar_root"
+              sequence="20"
+              groups="solar_core.group_compliance,base.group_system"/>
+
+    <menuitem id="menu_solar_wallet_all"
+              name="All wallets"
+              parent="menu_solar_wallet_root"
+              action="action_solar_wallet_all"
+              sequence="10"/>
+
+    <menuitem id="menu_solar_wallet_active"
+              name="Active"
+              parent="menu_solar_wallet_root"
+              action="action_solar_wallet_active"
+              sequence="20"/>
+
+    <menuitem id="menu_solar_wallet_frozen"
+              name="Frozen"
+              parent="menu_solar_wallet_root"
+              action="action_solar_wallet_frozen"
+              sequence="30"/>
+
+</odoo>

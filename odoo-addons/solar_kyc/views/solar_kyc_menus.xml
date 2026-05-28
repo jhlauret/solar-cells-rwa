@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_solar_kyc_root"
+              name="KYC / Compliance"
+              parent="solar_audit.menu_solar_root"
+              sequence="40"
+              groups="solar_core.group_compliance,
+                      solar_kyc.group_kyc_operator,
+                      base.group_system"/>
+
+    <menuitem id="menu_solar_kyc_pending"
+              name="Pending review"
+              parent="menu_solar_kyc_root"
+              action="action_solar_kyc_pending"
+              sequence="10"/>
+
+    <menuitem id="menu_solar_kyc_all"
+              name="All KYC cases"
+              parent="menu_solar_kyc_root"
+              action="action_solar_kyc_cases"
+              sequence="20"/>
+
+    <menuitem id="menu_solar_kyc_expiring"
+              name="Expiring soon (30 days)"
+              parent="menu_solar_kyc_root"
+              action="action_solar_kyc_expiring"
+              sequence="30"/>
+
+    <menuitem id="menu_solar_kyc_documents"
+              name="Documents"
+              parent="menu_solar_kyc_root"
+              action="action_solar_kyc_documents"
+              sequence="40"
+              groups="solar_core.group_compliance,base.group_system"/>
+
+</odoo>
