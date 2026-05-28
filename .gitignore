@@ -1,0 +1,88 @@
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- IDE ----------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ---------- Node / Frontend ----------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm
+.yarn-integrity
+.pnp.*
+dist/
+build/
+.next/
+.cache/
+.turbo/
+coverage/
+.eslintcache
+*.tsbuildinfo
+.vite/
+
+# ---------- Backend ----------
+backend-node/dist/
+backend-node/coverage/
+
+# ---------- Python / Odoo ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.python-version
+.venv/
+venv/
+env/
+
+# ---------- Odoo runtime ----------
+odoo-data/
+odoo-logs/
+filestore/
+sessions/
+
+# ---------- PostgreSQL ----------
+pgdata/
+postgres-data/
+*.dump
+*.sql.gz
+
+# ---------- Docker ----------
+docker-compose.override.yml
+
+# ---------- Env / secrets ----------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+secrets/
+
+# ---------- Tests / artefacts ----------
+playwright-report/
+test-results/
+.nyc_output/
+
+# ---------- Smart contracts (Hardhat/Foundry) ----------
+smart-contracts/artifacts/
+smart-contracts/cache/
+smart-contracts/typechain/
+smart-contracts/typechain-types/
+smart-contracts/out/
+smart-contracts/broadcast/
+
+# ---------- Logs ----------
+*.log
+logs/
