@@ -32,7 +32,7 @@ src/
 **New !  From JHL Extraction  du ZIP complet du projet la partie Front End uniquement**
 https://github.com/jhlauret/solar-cells-rwa/issues/21
 
-**est ce que tu peux me lister les 25 pages ? ├── src/pages/ 25 pages**
+**Est ce que tu peux me lister les 25 pages ? ├── src/pages/ 25 pages**
 https://github.com/jhlauret/solar-cells-rwa/issues/21#issuecomment-4564095386
 
 ## Statut
