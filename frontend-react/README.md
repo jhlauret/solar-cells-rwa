@@ -29,74 +29,11 @@ src/
 └── types/        # types partagés
 ```
 
-**NEw ! Extraction  du ZIP complet du projet la partie Front End uniquement**
-Ce que contient cette archive
-frontend-react/
-│
-├── Configuration               package.json · vite.config.ts
-│                               tsconfig.json · tailwind.config.ts
-│                               Dockerfile · .env.development · .env.production
-│
-├── src/components/
-│   ├── ui/                     14 composants atomiques
-│   │                           Button Badge Spinner Input PasswordInput
-│   │                           Select Checkbox FileDropzone RadioCard
-│   │                           Stepper StepperVertical Tabs Tag ProgressBar
-│   └── layout/                 5 layouts
-│                               SplitLayout OnboardingLayout InvestLayout
-│                               AuthLayout PublicLayout + Headers
-│
-├── src/contexts/               AuthContext.tsx
-├── src/hooks/                  7 hooks API (useAssets useKyc useDashboard
-│                               useInvestment usePayment useProfile
-│                               useEmailVerification)
-├── src/lib/                    api-client.ts · query-client.ts · cn.ts
-│
-├── src/features/               Composants métier + schemas Zod
-│                               auth · kyc · asset · investment · marketplace
-│
-├── src/pages/                  25 pages
-│   ├── auth/                   Login Signup VerifyEmail ForgotPassword
-│   ├── kyc/                    PersonalInfo Identity Selfie
-│   │                           ProofOfAddress SourceOfFunds Review
-│   ├── wallet/                 WalletTypeChoice WalletCreated
-│   ├── marketplace/            Marketplace AssetDetail
-│   ├── invest/                 Amount Summary Payment Confirmation Success
-│   ├── dashboard/              Dashboard Portfolio Yield Transfers
-│   └── profile/                Profile
-│
-└── src/routes/                 index.tsx (AppRouter complet)
-
-Pour démarrer après extraction
-
-cd frontend-react
-npm install
-cp .env.development .env.local
-# Renseigner VITE_API_URL et VITE_STRIPE_PUBLIC_KEY
-npm run dev
-
-Source fichier : Google folder under 
-https://drive.google.com/drive/folders/1DwTdSEWMZeUsJZ08nuE1HY-vNKyHCNsP
+**New !  From JHL Extraction  du ZIP complet du projet la partie Front End uniquement**
+https://github.com/jhlauret/solar-cells-rwa/issues/21
 
 **est ce que tu peux me lister les 25 pages ? ├── src/pages/ 25 pages**
-Pages générales (2)
-Auth (4)
-KYC (6)
-Wallet (2)
-Marketplace (2)
-Tunnel d'investissement (5)
-> InvestAmountPage.tsx
-> InvestSummaryPage.tsx
-> InvestPaymentPage.tsx
-> InvestConfirmationPage.tsx
-> InvestSuccessPage.tsx
-Dashboard (4)
-> DashboardPage.tsx
-> PortfolioPage.tsx
-> YieldPage.tsx
-> TransfersPage.tsx
-Profil (1)
-> ProfilePage.tsx
+https://github.com/jhlauret/solar-cells-rwa/issues/21#issuecomment-4564095386
 
 ## Statut
 🚧 Non initialisé. Aucun `package.json` à ce stade.
